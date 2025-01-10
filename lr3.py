@@ -1,105 +1,60 @@
 import tkinter as tk
 from tkinter import messagebox
 import random
+from PIL import Image, ImageTk
 
+# Генерация ключа по указанным правилам
+def generate_key():
+    input_number = entry.get()
+    # Проверка на то, что введено шестизначное число
+    if not input_number.isdigit() or len(input_number) != 6:
+        messagebox.showerror("Ошибка", "Введите шестизначное число.")
+        return
 
-def cancel():
-    window.destroy()
+    # Выделение цифр для формата ключа
+    block1_digits = input_number[3:6]  # 4, 5, 6 цифры
+    block2_digits = input_number[0:3]  # 1, 2, 3 цифры
 
+    # Генерация случайных букв
+    letters1 = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=2))
+    letters2 = ''.join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=2))
 
-def turns_countdown():
-    global TURNS
-    TURNS -= 1
-    return TURNS
+    # Подсчет суммы цифр в блоках 1 и 2
+    sum_block = sum(int(digit) for digit in block1_digits + block2_digits)
 
-
-def guess():
-    global WORD_TO_SHOW
-    global USED_LETTERS
-    letter = letter_entry.get()
-    if len(letter) > 1 or letter.isalpha() == False:
-        tk.messagebox.showwarning('Неверный ввод!', 'Нужно ввести букву!')
-        return 0
-    letter = letter.upper()
-    letter_entry.delete(-1)
-    turns_countdown()
-    turns_label.configure(text=f'Осталось ходов: {TURNS}')
-
-    USED_LETTERS += f'{letter} '
-    used_letters_label.configure(text=f'Log: {USED_LETTERS}')
+    # Форматирование ключа
+    generated_key = f"{block1_digits}{letters1}-{block2_digits}{letters2}-{sum_block:04d}"
     
-    if letter in WORD_TO_GUESS:
-        word_buf = WORD_TO_SHOW
-        WORD_TO_SHOW = ''
-        for i in range(5):
-            if WORD_TO_GUESS[i] == letter:
-                WORD_TO_SHOW += letter
-            else:
-                WORD_TO_SHOW += word_buf[i]
-    #print(WORD_TO_SHOW)
-    word_label.configure(text=WORD_TO_SHOW)
+    # Отображение сгенерированного ключа
+    result_label.config(text=f"Сгенерированный ключ: {generated_key}")
 
-    if WORD_TO_SHOW == WORD_TO_GUESS:
-        tk.messagebox.showinfo('Победа!', 'Вы угадали слово!')
-        window.destroy()
+# Инициализация окна Tkinter
+root = tk.Tk()
+root.title("Keygen")  # Заголовок окна
+root.geometry("400x300")  # Размер окна
 
-    if TURNS == 0 and WORD_TO_GUESS != WORD_TO_SHOW:
-        word_label.configure(text=WORD_TO_GUESS)
-        tk.messagebox.showerror('Не победа(', 'Вы не угадали слово...')
-        window.destroy()
+# Добавление фонового изображения
+background_image = Image.open("aoe2.png")
+background_image = background_image.resize((400, 300), Image.LANCZOS)
+bg_image = ImageTk.PhotoImage(background_image)
+background_label = tk.Label(root, image=bg_image)
+background_label.place(x=0, y=0, relwidth=1, relheight=1)
 
+# Добавление надписи с инструкцией
+instruction_label = tk.Label(root, text="Введите шестизначное число:", bg="white", font=("Arial", 12))
+instruction_label.pack(pady=10)
 
-def word_choose():
-    with open('words.txt', 'r') as words_list:
-        words = []
-        for word in words_list:
-            words.append(word)
-        myword = random.choice(words)
-    return myword
+# Поле для ввода пользователем числа
+entry = tk.Entry(root, font=("Arial", 12), width=10)
+entry.pack(pady=5)
 
+# Кнопка для генерации ключа
+generate_button = tk.Button(root, text="Генерировать ключ", command=generate_key, font=("Arial", 12), bg="blue", fg="white")
+generate_button.pack(pady=10)
 
-WORD_TO_GUESS = word_choose()[:5]
-WORD_TO_SHOW = '*****'
-TURNS = 10
-USED_LETTERS = ''
+# Метка для отображения сгенерированного ключа
+result_label = tk.Label(root, text="", bg="white", font=("Arial", 12))
+result_label.pack(pady=10)
 
-window = tk.Tk()
-window.title('My app')
-window.geometry('300x300')
-bg_img = tk.PhotoImage(file='gradient.png')
-
-label_bg = tk.Label(window, image=bg_img)
-label_bg.place(x=0, y=0, relwidth=1, relheight=1)
-
-word_label = tk.Label(window, text='*****', font=('Consolas', 50), 
-                      bg='red', fg='white')
-word_label.place(x=0, y=0, relwidth=1)
-
-letter_label = tk.Label(window, text='Введите букву: ', font=('Verdana', 14))
-letter_label.place(relx=0.07, rely=0.35)
-letter_entry = tk.Entry(window, width=5, font=('Verdana', 16))
-letter_entry.insert(0, 'a')
-letter_entry.place(relx=0.7, rely=0.35)
-
-turns_label = tk.Label(window, text=f'Осталось ходов: {TURNS}', font=('Verdana', 14))
-turns_label.place(relx=0.07, rely=0.5)
-
-btn_guess = tk.Button(window, text='OK', width=15, command=guess)
-btn_guess.place(relx=0.07, rely=0.7)
-btn_cancel = tk.Button(window, text='Cancel', width=15, command=cancel)
-btn_cancel.place(relx=0.55, rely=0.7)
-
-used_letters_label = tk.Label(window, text='Log:')
-used_letters_label.place(relx=0.5, rely=0.9, anchor='center')
-
-# label_text = tk.Label(window, text='Hello, ITMO!', font=('Verdana', 20), 
-#                       bg='red', fg='white')
-# label_text.pack()
-
-# user_entry = tk.Entry(window, width=10)
-# user_entry.pack()
-
-# button1 = tk.Button(window, text='OK', command=test)
-# button1.pack()
-
-window.mainloop()
+# Запуск основного цикла
+root.mainloop()
